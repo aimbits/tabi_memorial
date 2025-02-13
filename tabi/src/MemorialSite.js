@@ -14,26 +14,21 @@ const MemorialSite = () => {
     registrationDate: ''
   });
 
-  // Load saved registration data and validate session on component mount
   useEffect(() => {
-    // Load registered seats
     const savedSeats = localStorage.getItem('registeredSeats');
     if (savedSeats) {
       setRegisteredSeats(new Set(JSON.parse(savedSeats)));
     }
 
-    // Load last seat number
     const savedLastSeat = localStorage.getItem('lastSeatNumber');
     if (savedLastSeat) {
       setLastSeatNumber(parseInt(savedLastSeat));
     }
 
-    // Load and validate user session
     const savedData = localStorage.getItem('registrationData');
     if (savedData) {
       const parsedData = JSON.parse(savedData);
       
-      // Validate session expiry (24 hours)
       const registrationDate = new Date(parsedData.registrationDate);
       const now = new Date();
       const hoursDiff = (now - registrationDate) / (1000 * 60 * 60);
@@ -53,44 +48,54 @@ const MemorialSite = () => {
 
   const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
+    return re.test(String(email).toLowerCase());
+  };
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
   };
 
   const handleRegister = (e) => {
     e.preventDefault();
     setError('');
 
-    // Validate email
-    if (!validateEmail(formData.email)) {
+    const trimmedData = {
+      ...formData,
+      name: formData.name.trim(),
+      email: formData.email.trim(),
+      relationship: formData.relationship.trim()
+    };
+
+    if (!validateEmail(trimmedData.email)) {
       setError('Please enter a valid email address.');
       return;
     }
 
-    // Validate name length
-    if (formData.name.length < 2) {
+    if (trimmedData.name.length < 2) {
       setError('Please enter your full name.');
       return;
     }
 
     const nextSeatNumber = lastSeatNumber + 1;
     
-    // Check if seat is already taken
     if (registeredSeats.has(nextSeatNumber)) {
       setError('This seat is already taken. Please try again.');
       return;
     }
 
     const updatedFormData = {
-      ...formData,
+      ...trimmedData,
       seatNumber: nextSeatNumber,
       registrationDate: new Date().toISOString()
     };
 
-    // Update registered seats
     const updatedSeats = new Set(registeredSeats);
     updatedSeats.add(nextSeatNumber);
 
-    // Save all data to localStorage
     localStorage.setItem('registrationData', JSON.stringify(updatedFormData));
     localStorage.setItem('lastSeatNumber', nextSeatNumber.toString());
     localStorage.setItem('registeredSeats', JSON.stringify([...updatedSeats]));
@@ -115,7 +120,6 @@ const MemorialSite = () => {
     setError('');
   };
 
-  // Modal Registration Form
   const RegistrationModal = () => (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen px-4">
@@ -144,10 +148,11 @@ const MemorialSite = () => {
                 Full Name
               </label>
               <input
+                type="text"
                 id="name"
                 required
                 value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value.trim() }))}
+                onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -156,11 +161,11 @@ const MemorialSite = () => {
                 Email
               </label>
               <input
-                id="email"
                 type="email"
+                id="email"
                 required
                 value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value.trim() }))}
+                onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -169,10 +174,11 @@ const MemorialSite = () => {
                 Relationship to Deceased
               </label>
               <input
+                type="text"
                 id="relationship"
                 required
                 value={formData.relationship}
-                onChange={(e) => setFormData(prev => ({ ...prev, relationship: e.target.value.trim() }))}
+                onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -188,7 +194,6 @@ const MemorialSite = () => {
     </div>
   );
 
-  // Main Content component remains the same as before...
   const MainContent = () => (
     <div className="max-w-xl mx-auto space-y-6">
       {!isRegistered ? (
