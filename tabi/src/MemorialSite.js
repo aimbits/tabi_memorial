@@ -44,7 +44,7 @@ const MemorialSite = () => {
         setIsRegistered(true);
       }
     }
-  }, []);
+  }, [registeredSeats]);
 
   const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
